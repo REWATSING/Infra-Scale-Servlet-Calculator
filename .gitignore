@@ -1,3 +1,8 @@
+
+#Set up strcture bash commant for automate it 
+setup_project.sh
+
+
 # Compiled class file
 *.class
 
