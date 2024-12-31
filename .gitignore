@@ -1,7 +1,7 @@
 
 #Set up strcture bash commant for automate it 
 setup_project.sh
-
+setup_calculator_project.sh
 
 # Compiled class file
 *.class
