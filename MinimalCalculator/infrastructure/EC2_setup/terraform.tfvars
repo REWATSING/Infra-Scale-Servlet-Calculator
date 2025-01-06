@@ -1,8 +1,0 @@
-ami_id              = "ami-083710e964ef3e09d"
-key_name            = "keypair2" 
-vpc_id              = "vpc-08a26beb2166bc31b"
-public_sg_id        = "sg-0283ca502d8968b43"
-private_sg_id       = "sg-0019c03292d326d7c"
-public_subnet_id    = "subnet-01c597e20b56e9af1"
-private_subnet_id_az1 = "subnet-013a07a6cba519663"
-private_subnet_id_az2 = "subnet-0e8b9dada069e29e3"
