@@ -12,11 +12,11 @@ jobs:
 
     env:
       AWS_REGION: us-east-1  # AWS region
-      PRIVATE_INSTANCES: "10.0.3.69 10.0.4.13"  # Private instance IPs (not used directly with ALB)
+      PRIVATE_INSTANCES: "10.0.3.69 10.0.4.13"  # Private instance IPs
       DEPLOY_USER: ubuntu  # SSH user for the private instances
+      BASTION_HOST: 34.237.139.153  # Bastion host public IP
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS access key
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS secret key
-      ALB_DNS: my-alb-2142602622.us-east-1.elb.amazonaws.com  # ALB DNS
 
     steps:
       - name: Checkout code
@@ -41,12 +41,14 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_KEY }}
 
-      - name: Deploy to EC2 Instances (via ALB)
+      - name: Deploy to Private Instances (via Bastion Host)
         run: |
-          echo "Deploying WAR file to EC2 instances via ALB: $ALB_DNS"
-          # Copy WAR file to the private instances through ALB (ALB handles traffic routing)
-          scp -o StrictHostKeyChecking=no deployment/calculator.war $DEPLOY_USER@$ALB_DNS:/tmp/calculator.war
-          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$ALB_DNS << 'EOF'
-          sudo mv /tmp/calculator.war /var/lib/tomcat/webapps/
-          sudo systemctl restart tomcat
-          EOF
+          for INSTANCE in $PRIVATE_INSTANCES; do
+            echo "Deploying to $INSTANCE"
+            # Deploy via Bastion Host
+            scp -o StrictHostKeyChecking=no -o ProxyCommand="ssh -W %h:%p -i ${{ secrets.EC2_KEY }} $DEPLOY_USER@$BASTION_HOST" deployment/calculator.war $DEPLOY_USER@$INSTANCE:/tmp/calculator.war
+            ssh -o StrictHostKeyChecking=no -o ProxyCommand="ssh -W %h:%p -i ${{ secrets.EC2_KEY }} $DEPLOY_USER@$BASTION_HOST" $DEPLOY_USER@$INSTANCE << 'EOF'
+            sudo mv /tmp/calculator.war /var/lib/tomcat/webapps/
+            sudo systemctl restart tomcat
+            EOF
+          done
