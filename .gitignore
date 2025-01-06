@@ -69,4 +69,4 @@ dist/
 *~
 # Ignore Terraform directories and files
 .terraform/
-setup_calculator_project.sh
+*.sh
