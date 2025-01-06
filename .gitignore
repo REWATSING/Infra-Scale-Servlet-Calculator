@@ -67,3 +67,5 @@ dist/
 *.bak
 *.swp
 *~
+# Ignore Terraform directories and files
+.terraform/
