@@ -1,99 +1,43 @@
-name: Deploy to EC2
+name: Deploy Java Minimal Calculator
 
 on:
   push:
-    branches: [ "main" ] # Trigger on pushes to the main branch
-  pull_request:
-    branches: [ "main" ] # Trigger on pull requests targeting the main branch
-  schedule:
-    - cron: '0 0 * * 0' # Weekly deployment on Sunday at 00:00 UTC (can be adjusted based on timezone)
-
-env:
-  ARTIFACT_NAME: calculator-app
+    branches:
+      - main
 
 jobs:
-  codeql-analysis:
+  build-and-deploy:
+    name: Build and Deploy Java App
     runs-on: ubuntu-latest
 
-    permissions:
-      actions: read
-      contents: read
-      security-events: write # Required for uploading results to GitHub Security tab
+    env:
+      AWS_REGION: us-east-1 # Replace with your region
+      PRIVATE_INSTANCES: "10.0.3.69 10.0.4.13" # Replace with private instance IPs
+      DEPLOY_USER: ubuntu # Replace with the user for SSH
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: ${{ matrix.language }}
-        strategy:
-          matrix:
-            language: [ 'java' ]
+    - name: Build with Maven
+      run: mvn clean package
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+    - name: Prepare Artifact
+      run: |
+        mkdir -p deployment
+        cp target/*.war deployment/calculator.war
 
-  build:
-    runs-on: ubuntu-latest
-    needs: codeql-analysis
+    - name: Configure SSH Key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_KEY }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Build with Maven
-        run: mvn package
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: target/MinimalCalculator.war
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-
-      - name: Deploy to EC2
-        env:
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOSTS: "host1,host2"
-          EC2_KEY: ${{ secrets.EC2_KEY }}
-        run: |
-          set -e
-          for HOST in $(echo $EC2_HOSTS | tr "," "\n"); do
-            echo "Deploying to $HOST..."
-            # Transfer the WAR file to the EC2 instance
-            scp -i $EC2_KEY MinimalCalculator.war $EC2_USER@$HOST:/home/ubuntu/ || { echo "SCP to $HOST failed"; exit 1; }
-            
-            # Deploy to Tomcat and restart Tomcat service
-            ssh -i $EC2_KEY $EC2_USER@$HOST <<EOF
-              set -e
-              # Move WAR file to Tomcat webapps directory
-              sudo mv /home/ubuntu/MinimalCalculator.war /var/lib/tomcat/webapps/ || { echo "Move on $HOST failed"; exit 1; }
-              # Restart Tomcat to deploy the WAR file
-              sudo systemctl restart tomcat || { echo "Tomcat restart on $HOST failed"; exit 1; }
-              EOF
-            echo "Deployment to $HOST completed successfully."
-          done
+    - name: Deploy to Private Instances
+      run: |
+        for INSTANCE in $PRIVATE_INSTANCES; do
+          scp -o StrictHostKeyChecking=no deployment/calculator.war $DEPLOY_USER@$INSTANCE:/tmp/calculator.war
+          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$INSTANCE << 'EOF'
+          sudo mv /tmp/calculator.war /var/lib/tomcat/webapps/
+          sudo systemctl restart tomcat
+          EOF
+        done
