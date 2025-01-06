@@ -1,0 +1,51 @@
+name: Deploy Java Minimal Calculator
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Java App
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1  # Replace with your region
+      PRIVATE_INSTANCES: "10.0.3.69 10.0.4.13"  # Replace with private instance IPs
+      DEPLOY_USER: ubuntu  # Replace with the user for SSH
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS access key
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS secret key
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Prepare Artifact
+        run: |
+          mkdir -p deployment
+          cp target/*.war deployment/calculator.war
+
+      - name: Set up AWS CLI
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set region $AWS_REGION
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_KEY }}
+
+      - name: Deploy to Private Instances
+        run: |
+          for INSTANCE in $PRIVATE_INSTANCES; do
+            scp -o StrictHostKeyChecking=no deployment/calculator.war $DEPLOY_USER@$INSTANCE:/tmp/calculator.war
+            ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$INSTANCE << 'EOF'
+            sudo mv /tmp/calculator.war /var/lib/tomcat/webapps/
+            sudo systemctl restart tomcat
+            EOF
+          done
