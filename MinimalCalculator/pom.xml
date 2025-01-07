@@ -16,5 +16,17 @@
 
     <build>
         <finalName>MinimalCalculator</finalName>
+        <plugins>
+            <!-- Maven Compiler Plugin Configuration -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version> <!-- Use a recent version -->
+                <configuration>
+                    <source>21</source> <!-- Set Java source version -->
+                    <target>21</target> <!-- Set Java target version -->
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>
