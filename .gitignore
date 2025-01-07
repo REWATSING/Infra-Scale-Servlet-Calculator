@@ -70,3 +70,4 @@ dist/
 # Ignore Terraform directories and files
 .terraform/
 *.sh
+*.bin
