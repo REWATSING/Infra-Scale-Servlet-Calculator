@@ -52,6 +52,7 @@ jobs:
 
       - name: Verify Artifact Exists
         run: ls -l target/
+
       - name: Set up SSH Key
         run: |
           mkdir -p ~/.ssh
@@ -73,18 +74,31 @@ jobs:
         run: |
           echo "Attempting to copy WAR file to Bastion Host"
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
-  
-      # SSH into the Bastion and transfer WAR to the Private Instance (First attempt)
-      - name: SSH into Bastion & Transfer WAR to Private Instance
+
+      - name: Copy SSH key to Bastion Host
+        run: |
+          echo "Copying private key to Bastion Host"
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ~/.ssh/id_rsa ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/.ssh/id_rsa
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} "chmod 600 /home/ubuntu/.ssh/id_rsa"
+
+      - name: Add SSH key to Bastion Host agent
+        run: |
+          echo "Adding SSH key to Bastion Host SSH agent"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa
+          EOF
+
+      - name: Transfer WAR file from Bastion to Private Instance
         run: |
           echo "Transferring WAR file from Bastion to Private Instance"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} \
-            "scp -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/opt/tomcat/webapps/"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
+            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/opt/tomcat/webapps/
+          EOF
 
-      # Restart Tomcat on the Private Instance
       - name: Restart Tomcat on Private Instance
         run: |
-          echo "Restarting Tomcat service on Private Instance"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} \
-            "sudo systemctl restart tomcat"
-
+          echo "Restarting Tomcat on Private Instance"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "sudo systemctl restart tomcat"
+          EOF
