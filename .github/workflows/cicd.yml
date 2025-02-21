@@ -60,18 +60,20 @@ jobs:
 
       - name: Copy WAR to Bastion Host
         run: |
-          scp -o StrictHostKeyChecking=no -i private_key.pem target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
+          scp -o StrictHostKeyChecking=no target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
 
       - name: SSH into Bastion & Transfer WAR to Private Instance
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
+            eval \$(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa
             scp -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/opt/tomcat/webapps/
           EOF
 
       - name: Restart Tomcat on Private Instance
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "
-              sudo systemctl restart tomcat
-            "
+            eval \$(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa
+            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "sudo systemctl restart tomcat"
           EOF
