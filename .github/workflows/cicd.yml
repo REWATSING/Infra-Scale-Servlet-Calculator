@@ -73,17 +73,7 @@ jobs:
         run: |
           echo "Attempting to copy WAR file to Bastion Host"
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
-        continue-on-error: true  # Continue even if this step fails, try the fallback
-
-      # Check if the previous SCP failed and try an alternate method (SSH Agent Forwarding)
-      - name: Fallback SCP to Bastion Host
-        if: failure()
-        run: |
-          echo "SCP to Bastion Host failed, attempting fallback"
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no -A ubuntu@${{ secrets.BASTION_PUBLIC_IP }} "scp -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/opt/tomcat/webapps/"
-          
+  
       # SSH into the Bastion and transfer WAR to the Private Instance (First attempt)
       - name: SSH into Bastion & Transfer WAR to Private Instance
         run: |
