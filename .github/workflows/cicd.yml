@@ -57,23 +57,23 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           ssh-add <(echo "${{ secrets.SSH_PRIVATE_KEY }}")
-
+      
       - name: Copy WAR to Bastion Host
         run: |
-          scp -o StrictHostKeyChecking=no target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
-
+          scp -v -o StrictHostKeyChecking=no target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
+      
       - name: SSH into Bastion & Transfer WAR to Private Instance
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            eval \$(ssh-agent -s)
-            ssh-add ~/.ssh/id_rsa
-            scp -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/opt/tomcat/webapps/
+          ssh -A -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa  # Ensure the private key is added to the agent
+            scp -v -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/opt/tomcat/webapps/
           EOF
-
+      
       - name: Restart Tomcat on Private Instance
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            eval \$(ssh-agent -s)
-            ssh-add ~/.ssh/id_rsa
+          ssh -A -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa  # Ensure the private key is added to the agent
             ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "sudo systemctl restart tomcat"
           EOF
