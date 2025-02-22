@@ -4,3 +4,5 @@ testing secre
 
 
 locate  /var/lib/tomcat/webapps 
+ addedd ubuntu  in tomcat group as only tomcat have wrote access to webapps 
+ 
