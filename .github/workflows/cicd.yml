@@ -100,5 +100,5 @@ jobs:
         run: |
           echo "Restarting Tomcat on Private Instance"
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "sudo systemctl restart tomcat"
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "sudo systemctl restart tomcat9"
           EOF
