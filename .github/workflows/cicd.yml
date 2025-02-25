@@ -93,7 +93,12 @@ jobs:
         run: |
           echo "Transferring WAR file from Bastion to Private Instance"
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/var/lib/tomcat9/webapps/
+            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/home/ubuntu/
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} << 'INNER_EOF'
+              sudo mv /home/ubuntu/*.war /var/lib/tomcat9/webapps/
+              sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/*.war
+              sudo chmod 644 /var/lib/tomcat9/webapps/*.war
+            INNER_EOF
           EOF
 
       - name: Restart Tomcat on Private Instance
