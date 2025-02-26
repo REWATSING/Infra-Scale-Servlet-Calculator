@@ -89,18 +89,12 @@ jobs:
             ssh-add ~/.ssh/id_rsa
           EOF
 
-      - name: Transfer WAR file from Bastion to Private Instance
+      - name: Ensure Ubuntu User Can Move WAR File via Bastion
         run: |
-          echo "Copying WAR file to Private Host"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} \
-            "scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no /home/ubuntu/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/home/ubuntu/"
-
-          echo "Moving WAR file to Tomcat webapps directory"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} << EOF
-            sudo mv /home/ubuntu/*.war /var/lib/tomcat9/webapps/
-            sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/*.war
-            sudo chmod 644 /var/lib/tomcat9/webapps/*.war
-          EOF
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -A ubuntu@${{ secrets.BASTION_PUBLIC_IP }} \
+          "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} \
+          'sudo usermod -aG tomcat ubuntu && newgrp tomcat && mv /home/ubuntu/*.war /var/lib/tomcat9/webapps/'"
+              
 
       - name: Restart Tomcat on Private Instance
         run: |
