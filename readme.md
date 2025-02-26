@@ -13,3 +13,5 @@ changed code to use 8080 and update traffic redirect from 8080 to 443 inSIDE ALB
 tehrew as an issue with subnets, ec2 now moved to private subnet ; 
 
 
+ xxx
+ 
