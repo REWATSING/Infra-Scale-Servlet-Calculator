@@ -15,3 +15,5 @@ tehrew as an issue with subnets, ec2 now moved to private subnet ;
 
  xxx
  
+
+deploy in new golden image :

@@ -27,9 +27,9 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
-            <scope>provided</scope>
+            <scope>compile</scope>  <!-- Change from provided to compile -->
         </dependency>
-
+        
         <!-- JSP API Dependency (if JSPs are used) -->
         <dependency>
             <groupId>javax.servlet.jsp</groupId>
