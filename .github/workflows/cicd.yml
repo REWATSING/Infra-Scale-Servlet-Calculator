@@ -38,7 +38,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build  # Ensures CI runs first
+    needs: build  # Ensure CI runs first
 
     steps:
       - name: Checkout Code
@@ -60,46 +60,31 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           # Disable strict host checking and known hosts
           echo -e "Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null" > ~/.ssh/config
-          
-      # Verify SSH Agent and add the key
+
+      # ✅ Use SSH Agent Forwarding Instead of Copying Keys
       - name: Add SSH Key to Agent
         run: |
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
-          # Debugging step to verify if the key is loaded
-          ssh-add -l
+          ssh-add -l  # Debugging to check if the key is loaded
 
-      # Copy the WAR file to the Bastion host (First attempt)
-      - name: Copy WAR to Bastion Host
+      # ✅ SCP Directly to Private Instance via Bastion using `-J`
+      - name: Copy WAR to Private Instance (via Bastion)
         run: |
-          echo "Attempting to copy WAR file to Bastion Host"
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no target/*.war ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/
+          scp -o StrictHostKeyChecking=no -o ProxyJump=ubuntu@${{ secrets.BASTION_PUBLIC_IP }} \
+          target/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/home/ubuntu/
 
-      - name: Copy SSH key to Bastion Host
+      # ✅ Deploy WAR to Tomcat using Bastion as Proxy (`-J`)
+      - name: Move WAR to Tomcat Webapps
         run: |
-          echo "Copying private key to Bastion Host"
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ~/.ssh/id_rsa ubuntu@${{ secrets.BASTION_PUBLIC_IP }}:/home/ubuntu/.ssh/id_rsa
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} "chmod 600 /home/ubuntu/.ssh/id_rsa"
-
-      - name: Add SSH key to Bastion Host agent
-        run: |
-          echo "Adding SSH key to Bastion Host SSH agent"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            eval $(ssh-agent -s)
-            ssh-add ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no -J ubuntu@${{ secrets.BASTION_PUBLIC_IP }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} << 'EOF'
+            sudo mv /home/ubuntu/*.war /var/lib/tomcat9/webapps/
+            sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/*.war
+            sudo chmod 644 /var/lib/tomcat9/webapps/*.war
           EOF
 
-      - name: Move WAR File via Bastion
+      # ✅ Restart Tomcat on Private Instance via Bastion (`-J`)
+      - name: Restart Tomcat Service
         run: |
-         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -A ubuntu@${{ secrets.BASTION_PUBLIC_IP }} \
-         "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} \
-         'sudo mv /home/ubuntu/*.war /var/lib/tomcat9/webapps/ && sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/*.war && sudo chmod 644 /var/lib/tomcat9/webapps/*.war'"
-          
-              
-
-      - name: Restart Tomcat on Private Instance
-        run: |
-          echo "Restarting Tomcat on Private Instance"
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_PUBLIC_IP }} << 'EOF'
-            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} "sudo systemctl restart tomcat9"
-          EOF
+          ssh -o StrictHostKeyChecking=no -J ubuntu@${{ secrets.BASTION_PUBLIC_IP }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} \
+          "sudo systemctl restart tomcat9"
