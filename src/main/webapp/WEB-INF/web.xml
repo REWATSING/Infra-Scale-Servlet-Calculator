@@ -7,4 +7,16 @@
         <servlet-name>CalculatorServlet</servlet-name>
         <url-pattern>/calculate</url-pattern>
     </servlet-mapping>
+
+
+    <!-- Health Check Servlet -->
+    <servlet>
+        <servlet-name>HealthCheckServlet</servlet-name>
+        <servlet-class>com.example.calculator.HealthCheckServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HealthCheckServlet</servlet-name>
+        <url-pattern>/health</url-pattern>
+    </servlet-mapping>
+
 </web-app>

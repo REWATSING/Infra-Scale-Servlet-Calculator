@@ -6,7 +6,9 @@ import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+//Calculator Servlet
 /** @WebServlet("/calculate") **/
+
 public class CalculatorServlet extends HttpServlet {
 
     @Override
@@ -39,5 +41,23 @@ public class CalculatorServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.println("<h1>Result: " + result + "</h1>");
         out.println("<a href='index.jsp'>Back to Calculator</a>");
+    }
+}
+
+
+
+// Health Check Servlet
+/**@WebServlet("/health") **/
+
+public class HealthCheckServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setStatus(HttpServletResponse.SC_OK);  // 200 OK status
+        response.setContentType("text/plain");
+        
+        // You can also return some other details about your app or environment here.
+        PrintWriter out = response.getWriter();
+        out.println("OK");  // Response to indicate that the service is healthy
     }
 }
