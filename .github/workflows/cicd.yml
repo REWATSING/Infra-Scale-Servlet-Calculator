@@ -1,9 +1,9 @@
-name: Java CI CD pipeline with Maven Tomcat
+name: Deploy WAR to S3
 
 on:
   push:
     branches:
-      - main  # or any other branch you want to trigger the build
+      - main  # Trigger on main branch push
 
 jobs:
   build:
@@ -23,68 +23,26 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml', '**/settings.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Upload WAR artifact
-        uses: actions/upload-artifact@v4
+      - name: Check AWS CLI Version
+        run: aws --version
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          name: java-servlet-calculator
-          path: target/*.war
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Change if needed
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build  # Ensure CI runs first
+      - name: Verify WAR File
+        run: ls -l target/*.war || echo "WAR file not found!"
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download WAR Artifact from CI Build
-        uses: actions/download-artifact@v4
-        with:
-          name: java-servlet-calculator
-          path: target/
-
-      - name: Verify Artifact Exists
-        run: ls -l target/
-
-      - name: Set up SSH Key
+      - name: Upload WAR to S3 (keep same name)
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          # Disable strict host checking and known hosts
-          echo -e "Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null" > ~/.ssh/config
-
-      # ✅ Use SSH Agent Forwarding Instead of Copying Keys
-      - name: Add SSH Key to Agent
-        run: |
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
-          ssh-add -l  # Debugging to check if the key is loaded
-
-      # ✅ SCP Directly to Private Instance via Bastion using `-J`
-      - name: Copy WAR to Private Instance (via Bastion)
-        run: |
-          scp -o StrictHostKeyChecking=no -o ProxyJump=ubuntu@${{ secrets.BASTION_PUBLIC_IP }} \
-          target/*.war ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }}:/home/ubuntu/
-
-      # ✅ Deploy WAR to Tomcat using Bastion as Proxy (`-J`)
-      - name: Move WAR to Tomcat Webapps
-        run: |
-          ssh -o StrictHostKeyChecking=no -J ubuntu@${{ secrets.BASTION_PUBLIC_IP }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} << 'EOF'
-            sudo mv /home/ubuntu/*.war /var/lib/tomcat9/webapps/
-            sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/*.war
-            sudo chmod 644 /var/lib/tomcat9/webapps/*.war
-          EOF
-
-      # ✅ Restart Tomcat on Private Instance via Bastion (`-J`)
-      - name: Restart Tomcat Service
-        run: |
-          ssh -o StrictHostKeyChecking=no -J ubuntu@${{ secrets.BASTION_PUBLIC_IP }} ubuntu@${{ secrets.PRIVATE_INSTANCE_IP }} \
-          "sudo systemctl restart tomcat9"
+          aws s3 cp target/*.war s3://${{ secrets.S3_BUCKET }}/java-servlet-calculator.war --acl private
