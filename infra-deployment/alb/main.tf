@@ -102,10 +102,14 @@ resource "aws_lb_listener" "https_listener" {
 }
 
 
+
+
+
+
 # Blue ASG
 resource "aws_autoscaling_group" "blue_asg" {
   name                = "blue-asg"
-  desired_capacity    = 2  # Start with 2 (1 per AZ)
+  desired_capacity    = 1  # Start with 2 (1 per AZ)
   min_size           = 1
   max_size           = 2
   vpc_zone_identifier = var.private_subnet_ids  # Ensure instances launch in multiple AZs
@@ -131,7 +135,7 @@ resource "aws_autoscaling_group" "blue_asg" {
 # Green ASG
 resource "aws_autoscaling_group" "green_asg" {
   name                = "green-asg"
-  desired_capacity    = 2
+  desired_capacity    = 1
   min_size           = 1
   max_size           = 2
   vpc_zone_identifier = var.private_subnet_ids  
@@ -153,3 +157,127 @@ resource "aws_autoscaling_group" "green_asg" {
   health_check_grace_period = 300      # This is the grace period after instance launch
 
 }
+
+
+
+
+
+
+
+# CloudWatch Alarm for Scaling Up (Blue ASG)
+resource "aws_cloudwatch_metric_alarm" "blue_scale_up" {
+  alarm_name          = "blue-scale-up"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 30  # Scale up if CPU ≥ 30%
+  alarm_description   = "Scale up when CPU utilization is greater than or equal to 30%."
+  alarm_actions       = [aws_autoscaling_policy.blue_scale_up.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.blue_asg.name
+  }
+}
+
+# CloudWatch Alarm for Scaling Down (Blue ASG)
+resource "aws_cloudwatch_metric_alarm" "blue_scale_down" {
+  alarm_name          = "blue-scale-down"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 5  # Scale down if CPU ≤ 5%
+  alarm_description   = "Scale down when CPU utilization is less than or equal to 5%."
+  alarm_actions       = [aws_autoscaling_policy.blue_scale_down.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.blue_asg.name
+  }
+}
+
+# Auto Scaling Policy for Scale-Up (Blue ASG)
+resource "aws_autoscaling_policy" "blue_scale_up" {
+  name                   = "blue-scale-up-policy"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown              = 60
+  autoscaling_group_name = aws_autoscaling_group.blue_asg.name
+}
+
+# Auto Scaling Policy for Scale-Down (Blue ASG)
+resource "aws_autoscaling_policy" "blue_scale_down" {
+  name                   = "blue-scale-down-policy"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown              = 60
+  autoscaling_group_name = aws_autoscaling_group.blue_asg.name
+}
+
+
+
+
+
+
+
+
+
+
+# CloudWatch Alarm for Scaling Up (Green ASG)
+resource "aws_cloudwatch_metric_alarm" "green_scale_up" {
+  alarm_name          = "green-scale-up"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 30  # Scale up if CPU ≥ 30%
+  alarm_description   = "Scale up when CPU utilization is greater than or equal to 30%."
+  alarm_actions       = [aws_autoscaling_policy.green_scale_up.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.green_asg.name
+  }
+}
+
+# CloudWatch Alarm for Scaling Down (Green ASG)
+resource "aws_cloudwatch_metric_alarm" "green_scale_down" {
+  alarm_name          = "green-scale-down"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 5  # Scale down if CPU ≤ 5%
+  alarm_description   = "Scale down when CPU utilization is less than or equal to 5%."
+  alarm_actions       = [aws_autoscaling_policy.green_scale_down.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.green_asg.name
+  }
+}
+
+# Auto Scaling Policy for Scale-Up (Green ASG)
+resource "aws_autoscaling_policy" "green_scale_up" {
+  name                   = "green-scale-up-policy"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown              = 60
+  autoscaling_group_name = aws_autoscaling_group.green_asg.name
+}
+
+# Auto Scaling Policy for Scale-Down (Green ASG)
+resource "aws_autoscaling_policy" "green_scale_down" {
+  name                   = "green-scale-down-policy"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown              = 60
+  autoscaling_group_name = aws_autoscaling_group.green_asg.name
+}
+

@@ -21,6 +21,9 @@ resource "aws_launch_template" "app_launch_template" {
   iam_instance_profile {
     name = var.instance_profile_name  # Ensure this is created in IAM-S3 module
   }
+  monitoring {
+    enabled = true  # Enables detailed monitoring (1-minute interval)
+  }
 
   user_data = base64encode(<<EOF
 #!/bin/bash -ex
