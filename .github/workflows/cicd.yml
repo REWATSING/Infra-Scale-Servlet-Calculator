@@ -2,8 +2,15 @@ name: Deploy WAR to S3
 
 on:
   push:
-    branches:
-      - main  # Trigger on main branch push
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read  # Allow reading repository files
+  packages: read  # If using GitHub Packages
+  id-token: write  # Needed for OIDC authentication (for AWS, Azure, etc.)
+  security-events: write  # Needed for security scans (CodeQL, Dependabot)
 
 jobs:
   build:
