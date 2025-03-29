@@ -135,8 +135,8 @@ resource "aws_autoscaling_group" "blue_asg" {
 # Green ASG
 resource "aws_autoscaling_group" "green_asg" {
   name                = "green-asg"
-  desired_capacity    = 1
-  min_size           = 1
+  desired_capacity    = 0
+  min_size           = 0
   max_size           = 2
   vpc_zone_identifier = var.private_subnet_ids  
   launch_template {
