@@ -24,3 +24,12 @@ nbproject/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+
+# Ignore sensitive files
+*.pem
+*.key
+*.tfstate
+.terraform/
+.env
+create.sh
