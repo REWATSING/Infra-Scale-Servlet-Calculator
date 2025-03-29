@@ -89,12 +89,12 @@ resource "aws_lb_listener" "https_listener" {
     forward {
       target_group {
         arn    = aws_lb_target_group.blue.arn
-        weight = 50   # 50% traffic to Blue
+        weight = 100   # 50% traffic to Blue
       }
 
       target_group {
         arn    = aws_lb_target_group.green.arn
-        weight = 50   # 50% traffic to Green
+        weight = 0   # 50% traffic to Green
       }
 
     }
