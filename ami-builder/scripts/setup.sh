@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e  # Exit immediately if a command fails
+#!/bin/bash -ex
 
 # Update system
 sudo apt update -y
@@ -34,5 +32,16 @@ sudo usermod -aG tomcat ubuntu
 # Ensure Tomcat listens on IPv4 (0.0.0.0 instead of localhost)
 sudo sed -i 's/address="127.0.0.1"/address="0.0.0.0"/' /etc/tomcat9/server.xml
 
+# Download and deploy the latest WAR file from S3
+sudo rm -rf /var/lib/tomcat9/webapps/ROOT*
+aws s3 cp s3://calculator-bucket-271271271271/java-servlet-calculator.war /var/lib/tomcat9/webapps/ROOT.war
+
+# Set proper permissions for the WAR file
+sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/ROOT.war
+sudo chmod 644 /var/lib/tomcat9/webapps/ROOT.war
+
 # Restart Tomcat to deploy the application
 sudo systemctl restart tomcat9
+
+# Verify Tomcat is running
+systemctl status tomcat9 --no-pager

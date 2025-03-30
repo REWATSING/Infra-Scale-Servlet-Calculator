@@ -25,7 +25,8 @@ module "alb" {
   subnet_ids             = module.vpc.subnet_ids
   alb_sg_id              = module.security_groups.security_group_ids[0]
   private_subnet_ids     = module.vpc.subnet_ids.private
-  aws_launch_template_id = module.ec2.aws_launch_template_id
+  blue_launch_template_id = module.ec2.blue_launch_template_id
+  green_launch_template_id = module.ec2.green_launch_template_id
   acm_certificate_arn    = module.SSL.certificate_arn
 }
 
@@ -50,4 +51,14 @@ module "ec2" {
 
 module "IAM_S3" {
   source = "./IAM_S3"
+}
+
+data "aws_ami" "latest_tomcat_ami" {
+  most_recent = true
+  owners      = ["self"] # Your AWS Account
+
+  filter {
+    name   = "name"
+    values = ["tomcat-mvn-golden-ami-*"] # Match AMIs created by Packer
+  }
 }

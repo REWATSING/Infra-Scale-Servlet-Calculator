@@ -12,12 +12,12 @@ Packer use ##ECDSA key in AWS for SSH : Keep that in
 ## Usage
 1. Validate the Packer configuration:
    ```
-   packer validate goldenAMI.pkr.hcl
+   packer validate Tomcat_Maven_GoldenAMI.pkr.hcl
    ```
 
 2. Build the AMI:
    ```
-   packer build goldenAMI.pkr.hcl
+   packer build Tomcat_Maven_GoldenAMI.pkr.hcl
    ```
 
 Ensure that your AWS credentials and private key are properly configured before running Packer.

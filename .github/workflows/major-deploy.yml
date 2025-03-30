@@ -1,19 +1,17 @@
-name: Deploy WAR to S3
+name: Major Deployment - Build AMI & Deploy Infra
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [major-update]
 
 permissions:
-  contents: read  # Allow reading repository files
-  packages: read  # If using GitHub Packages
-  id-token: write  # Needed for OIDC authentication (for AWS, Azure, etc.)
-  security-events: write  # Needed for security scans (CodeQL, Dependabot)
+  contents: read
+  packages: read
+  id-token: write
+  security-events: write
 
 jobs:
-  build:
+  deploy-major:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,9 +35,6 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Check AWS CLI Version
-        run: aws --version
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -50,6 +45,30 @@ jobs:
       - name: Verify WAR File
         run: ls -l target/*.war || echo "WAR file not found!"
 
-      - name: Upload WAR to S3 (keep same name)
+      - name: Upload WAR to S3
         run: |
           aws s3 cp target/*.war s3://${{ secrets.S3_BUCKET }}/java-servlet-calculator.war --acl private
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          packer_version: latest
+
+      - name: Build AMI with Packer
+        run: |
+          packer init .
+          packer build .
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan

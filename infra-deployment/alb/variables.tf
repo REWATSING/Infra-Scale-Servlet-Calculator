@@ -24,7 +24,12 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
-variable "aws_launch_template_id" {
+variable "blue_launch_template_id" {
+  description = "ID of the AWS Launch Template"
+  type        = string
+}
+
+variable "green_launch_template_id" {
   description = "ID of the AWS Launch Template"
   type        = string
 }

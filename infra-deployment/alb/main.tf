@@ -89,12 +89,12 @@ resource "aws_lb_listener" "https_listener" {
     forward {
       target_group {
         arn    = aws_lb_target_group.blue.arn
-        weight = 100   # 50% traffic to Blue
+        weight = 100   # 100% traffic to Blue
       }
 
       target_group {
         arn    = aws_lb_target_group.green.arn
-        weight = 0   # 50% traffic to Green
+        weight = 0   # 0% traffic to Green
       }
 
     }
@@ -104,17 +104,15 @@ resource "aws_lb_listener" "https_listener" {
 
 
 
-
-
 # Blue ASG
 resource "aws_autoscaling_group" "blue_asg" {
   name                = "blue-asg"
-  desired_capacity    = 1  # Start with 2 (1 per AZ)
-  min_size           = 1
-  max_size           = 2
+  desired_capacity    = 2  # Start with 2 (1 per AZ)
+  min_size           = 2
+  max_size           = 3
   vpc_zone_identifier = var.private_subnet_ids  # Ensure instances launch in multiple AZs
   launch_template {
-    id      = var.aws_launch_template_id
+    id      = var.blue_launch_template_id
     version = "$Latest"
   }
 
@@ -137,10 +135,10 @@ resource "aws_autoscaling_group" "green_asg" {
   name                = "green-asg"
   desired_capacity    = 0
   min_size           = 0
-  max_size           = 2
+  max_size           = 3
   vpc_zone_identifier = var.private_subnet_ids  
   launch_template {
-    id      = var.aws_launch_template_id
+    id      = var.green_launch_template_id
     version = "$Latest"
   }
 
@@ -161,9 +159,6 @@ resource "aws_autoscaling_group" "green_asg" {
 
 
 
-
-
-
 # CloudWatch Alarm for Scaling Up (Blue ASG)
 resource "aws_cloudwatch_metric_alarm" "blue_scale_up" {
   alarm_name          = "blue-scale-up"
@@ -175,7 +170,10 @@ resource "aws_cloudwatch_metric_alarm" "blue_scale_up" {
   statistic           = "Average"
   threshold           = 30  # Scale up if CPU ≥ 30%
   alarm_description   = "Scale up when CPU utilization is greater than or equal to 30%."
-  alarm_actions       = [aws_autoscaling_policy.blue_scale_up.arn]
+  alarm_actions       = [
+    aws_autoscaling_policy.blue_scale_up.arn,
+    aws_sns_topic.tomcat_server_alerts.arn
+  ]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.blue_asg.name
@@ -193,7 +191,10 @@ resource "aws_cloudwatch_metric_alarm" "blue_scale_down" {
   statistic           = "Average"
   threshold           = 5  # Scale down if CPU ≤ 5%
   alarm_description   = "Scale down when CPU utilization is less than or equal to 5%."
-  alarm_actions       = [aws_autoscaling_policy.blue_scale_down.arn]
+  alarm_actions       = [
+    aws_autoscaling_policy.blue_scale_down.arn,
+    aws_sns_topic.tomcat_server_alerts.arn
+  ]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.blue_asg.name
@@ -220,13 +221,6 @@ resource "aws_autoscaling_policy" "blue_scale_down" {
 
 
 
-
-
-
-
-
-
-
 # CloudWatch Alarm for Scaling Up (Green ASG)
 resource "aws_cloudwatch_metric_alarm" "green_scale_up" {
   alarm_name          = "green-scale-up"
@@ -238,7 +232,10 @@ resource "aws_cloudwatch_metric_alarm" "green_scale_up" {
   statistic           = "Average"
   threshold           = 30  # Scale up if CPU ≥ 30%
   alarm_description   = "Scale up when CPU utilization is greater than or equal to 30%."
-  alarm_actions       = [aws_autoscaling_policy.green_scale_up.arn]
+  alarm_actions       = [
+    aws_autoscaling_policy.green_scale_up.arn,
+    aws_sns_topic.tomcat_server_alerts.arn
+  ]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.green_asg.name
@@ -256,7 +253,10 @@ resource "aws_cloudwatch_metric_alarm" "green_scale_down" {
   statistic           = "Average"
   threshold           = 5  # Scale down if CPU ≤ 5%
   alarm_description   = "Scale down when CPU utilization is less than or equal to 5%."
-  alarm_actions       = [aws_autoscaling_policy.green_scale_down.arn]
+  alarm_actions       = [
+    aws_autoscaling_policy.green_scale_down.arn,
+    aws_sns_topic.tomcat_server_alerts.arn
+  ]
 
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.green_asg.name
@@ -281,3 +281,74 @@ resource "aws_autoscaling_policy" "green_scale_down" {
   autoscaling_group_name = aws_autoscaling_group.green_asg.name
 }
 
+
+
+
+
+# Create an SNS Topic
+resource "aws_sns_topic" "tomcat_server_alerts" {
+  name = "tomcat-alerts-topic"
+}
+
+# Subscribe your email to the SNS Topic
+resource "aws_sns_topic_subscription" "email_subscription" {
+  topic_arn = aws_sns_topic.tomcat_server_alerts.arn
+  protocol  = "email"
+  endpoint  = "rewatsingh271@gmail.com"
+}
+
+# Allow CloudWatch and Auto Scaling to publish to SNS
+resource "aws_sns_topic_policy" "sns_policy" {
+  arn    = aws_sns_topic.tomcat_server_alerts.arn
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudwatch.amazonaws.com"
+      },
+      "Action": "sns:Publish",
+      "Resource": "${aws_sns_topic.tomcat_server_alerts.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "autoscaling.amazonaws.com"
+      },
+      "Action": "sns:Publish",
+      "Resource": "${aws_sns_topic.tomcat_server_alerts.arn}"
+    }
+  ]
+}
+POLICY
+}
+
+# Auto Scaling Notification for Blue ASG
+resource "aws_autoscaling_notification" "blue_asg_notifications" {
+  group_names = [aws_autoscaling_group.blue_asg.name]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
+    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+  ]
+
+  topic_arn = aws_sns_topic.tomcat_server_alerts.arn
+}
+
+# Auto Scaling Notification for Green ASG
+resource "aws_autoscaling_notification" "green_asg_notifications" {
+  group_names = [aws_autoscaling_group.green_asg.name]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
+    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+  ]
+
+  topic_arn = aws_sns_topic.tomcat_server_alerts.arn
+}
