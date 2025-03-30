@@ -20,14 +20,14 @@ module "security_groups" {
 }
 
 module "alb" {
-  source                 = "./alb"
-  vpc_id                 = module.vpc.vpc_id
-  subnet_ids             = module.vpc.subnet_ids
-  alb_sg_id              = module.security_groups.security_group_ids[0]
-  private_subnet_ids     = module.vpc.subnet_ids.private
-  blue_launch_template_id = module.ec2.blue_launch_template_id
+  source                   = "./alb"
+  vpc_id                   = module.vpc.vpc_id
+  subnet_ids               = module.vpc.subnet_ids
+  alb_sg_id                = module.security_groups.security_group_ids[0]
+  private_subnet_ids       = module.vpc.subnet_ids.private
+  blue_launch_template_id  = module.ec2.blue_launch_template_id
   green_launch_template_id = module.ec2.green_launch_template_id
-  acm_certificate_arn    = module.SSL.certificate_arn
+  acm_certificate_arn      = module.SSL.certificate_arn
 }
 
 
