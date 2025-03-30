@@ -12,6 +12,20 @@ resource "aws_instance" "bastion_host" {
 }
 
 
+
+
+# Fetch Latets AMI ID from aws ami
+
+data "aws_ami" "latest_tomcat_ami" {
+  most_recent = true
+  owners      = ["self"] # Your AWS Account
+
+  filter {
+    name   = "name"
+    values = ["tomcat-mvn-golden-ami-*"] # Match AMIs created by Packer
+  }
+}
+
 # Create a single Launch Template for both Blue & Green
 resource "aws_launch_template" "blue_launch_template" {
   name          = "blue-launch-template"
