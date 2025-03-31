@@ -3,7 +3,7 @@ resource "aws_instance" "bastion_host" {
   ami                     = data.aws_ami.latest_tomcat_ami.id # Use the dynamically fetched AMI
   instance_type           = var.instance_type
   subnet_id               = var.public_subnet_id
-  vpc_security_group_ids =  [var.bastion_sg_id]  
+  vpc_security_group_ids  =  [var.bastion_sg_id]  
   associate_public_ip_address = true
   key_name = var.key_name
   tags = {
@@ -28,7 +28,7 @@ data "aws_ami" "latest_tomcat_ami" {
 # Create a single Launch Template for both Blue & Green
 resource "aws_launch_template" "blue_launch_template" {
   name          = "blue-launch-template"
-  image_id      = ami-0214c0e4bf42088ab
+  image_id      = var.ami_id
   instance_type = var.instance_type  
   key_name      = var.key_name
   iam_instance_profile {

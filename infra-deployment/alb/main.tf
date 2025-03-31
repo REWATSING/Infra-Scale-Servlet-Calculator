@@ -109,7 +109,7 @@ resource "aws_autoscaling_group" "blue_asg" {
   name                = "blue-asg"
   desired_capacity    = 2  # Start with 2 (1 per AZ)
   min_size           = 2
-  max_size           = 3
+  max_size           = 4
   vpc_zone_identifier = var.private_subnet_ids  # Ensure instances launch in multiple AZs
   launch_template {
     id      = var.blue_launch_template_id
@@ -135,7 +135,7 @@ resource "aws_autoscaling_group" "green_asg" {
   name                = "green-asg"
   desired_capacity    = 2
   min_size           = 2
-  max_size           = 3
+  max_size           = 4
   vpc_zone_identifier = var.private_subnet_ids  
   launch_template {
     id      = var.green_launch_template_id
