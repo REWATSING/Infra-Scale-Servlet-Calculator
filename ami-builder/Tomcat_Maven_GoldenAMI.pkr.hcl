@@ -9,7 +9,7 @@ packer {
 
 source "amazon-ebs" "EBS-is-source" {
   region                 = "us-east-1"
-  source_ami             = "ami-005fc0f236362e99f" # Base AMI (Ubuntu)
+  source_ami             = "ami-084568db4383264d4" # Base AMI (Ubuntu)
   instance_type          = "t2.micro"
   ssh_username           = "ubuntu" # Default for Ubuntu AMI
   ssh_keypair_name       = "packerkey" # Name of your key pair in AWS
