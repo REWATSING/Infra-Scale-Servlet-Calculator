@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+    amazon = {
+      version = ">= 1.0.0"
+      source  = "github.com/hashicorp/amazon"
+    }
+  }
+}
+
 source "amazon-ebs" "EBS-is-source" {
   region                 = "us-east-1"
   source_ami             = "ami-005fc0f236362e99f" # Base AMI (Ubuntu)
