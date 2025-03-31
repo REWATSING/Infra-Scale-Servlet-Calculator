@@ -13,7 +13,6 @@ resource "aws_instance" "bastion_host" {
 
 
 
-
 # Fetch Latets AMI ID from aws ami
 
 data "aws_ami" "latest_tomcat_ami" {
@@ -29,7 +28,7 @@ data "aws_ami" "latest_tomcat_ami" {
 # Create a single Launch Template for both Blue & Green
 resource "aws_launch_template" "blue_launch_template" {
   name          = "blue-launch-template"
-  image_id      = data.aws_ami.latest_tomcat_ami.id # Use the dynamically fetched AMI
+  image_id      = ami-0214c0e4bf42088ab
   instance_type = var.instance_type  
   key_name      = var.key_name
   iam_instance_profile {

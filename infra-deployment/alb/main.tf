@@ -133,8 +133,8 @@ resource "aws_autoscaling_group" "blue_asg" {
 # Green ASG
 resource "aws_autoscaling_group" "green_asg" {
   name                = "green-asg"
-  desired_capacity    = 0
-  min_size           = 0
+  desired_capacity    = 2
+  min_size           = 2
   max_size           = 3
   vpc_zone_identifier = var.private_subnet_ids  
   launch_template {
@@ -282,9 +282,6 @@ resource "aws_autoscaling_policy" "green_scale_down" {
 }
 
 
-
-
-
 # Create an SNS Topic
 resource "aws_sns_topic" "tomcat_server_alerts" {
   name = "tomcat-alerts-topic"
@@ -296,6 +293,7 @@ resource "aws_sns_topic_subscription" "email_subscription" {
   protocol  = "email"
   endpoint  = "rewatsingh271@gmail.com"
 }
+
 
 # Allow CloudWatch and Auto Scaling to publish to SNS
 resource "aws_sns_topic_policy" "sns_policy" {
