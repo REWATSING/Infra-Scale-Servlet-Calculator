@@ -1,4 +1,4 @@
-#!/bin/bash -euo pipefail
+#!/bin/bash -e
 
 # Update and fix package issues
 sudo apt update -y
