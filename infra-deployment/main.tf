@@ -27,9 +27,8 @@ module "alb" {
   private_subnet_ids     = module.vpc.subnet_ids.private
   blue_launch_template_id = module.ec2.blue_launch_template_id
   green_launch_template_id = module.ec2.green_launch_template_id
-  acm_certificate_arn    = module.SSL.certificate_arn
+  acm_certificate_arn     = module.SSL.certificate_arn
 }
-
 
 module "SSL" {
   source       = "./SSL"
