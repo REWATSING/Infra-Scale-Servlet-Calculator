@@ -38,10 +38,9 @@ jobs:
 
       - name: Setup SSH Private Key
         run: |
-          echo "${{ secrets.PACKER_KEY }}" | sed 's/\\n/\n/g' > ~/ecdsakeypair.pem
-          chmod 600 ~/ecdsakeypair.pem
-          ls -la ~/ecdsakeypair.pem
-          cat ~/ecdsakeypair.pem # Debug: Ensure key is properly stored
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PACKER_KEY }}" | tr -d '\r' > ~/.ssh/ecdsakeypair.pem
+          chmod 600 ~/.ssh/ecdsakeypair.pem
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -62,7 +61,7 @@ jobs:
       - name: Setup Packer              
         uses: hashicorp/setup-packer@v2
         with:
-          packer_version: latest
+          version: latest
 
       - name: Build AMI with Packer
         working-directory: ami-builder
