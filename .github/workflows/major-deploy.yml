@@ -36,6 +36,11 @@ jobs:
         working-directory: app-code
         run: mvn clean package
 
+      - name: Setup SSH Private Key
+        run: |
+          echo "${{ secrets.PACKER_KEY }}" > ~/ecdsakeypair.pem
+          sudo chmod 400 ~/ecdsakeypair.pem
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
