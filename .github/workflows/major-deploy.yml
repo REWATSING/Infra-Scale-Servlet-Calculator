@@ -38,8 +38,10 @@ jobs:
 
       - name: Setup SSH Private Key
         run: |
-          echo "${{ secrets.PACKER_KEY }}" > ~/ecdsakeypair.pem
-          sudo chmod 400 ~/ecdsakeypair.pem
+          echo "${{ secrets.PACKER_KEY }}" | sed 's/\\n/\n/g' > ~/ecdsakeypair.pem
+          chmod 600 ~/ecdsakeypair.pem
+          ls -la ~/ecdsakeypair.pem
+          cat ~/ecdsakeypair.pem # Debug: Ensure key is properly stored
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
