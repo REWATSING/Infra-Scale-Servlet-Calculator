@@ -33,6 +33,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
+        working-directory: app-code
         run: mvn clean package
 
       - name: Configure AWS Credentials
@@ -43,18 +44,21 @@ jobs:
           aws-region: us-east-1  # Change if needed
 
       - name: Verify WAR File
+        working-directory: app-code
         run: ls -l target/*.war || echo "WAR file not found!"
 
       - name: Upload WAR to S3
+        working-directory: app-code
         run: |
           aws s3 cp target/*.war s3://${{ secrets.S3_BUCKET }}/java-servlet-calculator.war --acl private
 
-      - name: Setup Packer
+      - name: Setup Packer              
         uses: hashicorp/setup-packer@v2
         with:
           packer_version: latest
 
       - name: Build AMI with Packer
+        working-directory: ami-builder
         run: |
           packer init .
           packer build .
@@ -65,10 +69,13 @@ jobs:
           terraform_version: latest
 
       - name: Terraform Init
+        working-directory: infra-deployment
         run: terraform init
 
       - name: Terraform Plan
+        working-directory: infra-deployment
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
+        working-directory: infra-deployment
         run: terraform apply -auto-approve tfplan
