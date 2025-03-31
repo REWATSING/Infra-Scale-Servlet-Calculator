@@ -12,8 +12,8 @@ source "amazon-ebs" "EBS-is-source" {
   source_ami             = "ami-005fc0f236362e99f" # Base AMI (Ubuntu)
   instance_type          = "t2.micro"
   ssh_username           = "ubuntu" # Default for Ubuntu AMI
-  ssh_keypair_name       = "ecdsakeypair" # Name of your key pair in AWS
-  ssh_private_key_file   =  "~/ecdsakeypair.pem"  # Path to your private key file
+  ssh_keypair_name       = "packerkey" # Name of your key pair in AWS
+  ssh_private_key_file   =  "~/packerkey.pem"  # Path to your private key file
   ami_name               = "tomcat-mvn-golden-ami-{{timestamp}}"
 }
 
