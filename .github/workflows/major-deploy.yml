@@ -38,8 +38,8 @@ jobs:
 
       - name: Setup SSH Private Key
         run: |
-          echo "${{ secrets.PACKER_KEY }}" | tr -d '\r' > ~/packerkey.pem
-          chmod 400 ~/packerkey.pem
+          echo "${{ secrets.PACKER_KEY }}" > ~/packerkey.pem
+          chmod 600 ~/packerkey.pem
           eval "$(ssh-agent -s)"
           ssh-add ~/packerkey.pem
       
