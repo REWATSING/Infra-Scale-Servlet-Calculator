@@ -1,62 +1,56 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
-# Update and fix package issues
-sudo apt update
+# Update system
+sudo apt update -y
 sudo apt upgrade -y
-sudo apt install -f -y || { echo "Fixing broken dependencies failed!"; exit 1; }
-sudo apt clean && sudo apt autoremove -y
 
-# Ensure ca-certificates for AWS CLI
-sudo apt install -y ca-certificates
+# Install Java 11 (default in Ubuntu 22.04)
+sudo apt install -y openjdk-11-jdk ca-certificates
 
-# Install required packages (using only OpenJDK 11)
-if ! sudo apt install -y openjdk-11-jdk maven awscli tomcat9 tomcat9-admin tomcat9-common; then
-    sudo apt install -f -y || { echo "Failed to install some dependencies!"; exit 1; }
-fi
+# Install required packages (Tomcat 9 is available in 22.04)
+sudo apt install -y maven awscli tomcat9 tomcat9-admin tomcat9-common
 
-# Set default Java version
-if command -v java >/dev/null 2>&1; then
-    sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java || { echo "Failed to set Java version!"; exit 1; }
-else
-    echo "Java installation failed! Exiting."
-    exit 1
-fi
+# Set default Java version dynamically
+JAVA_PATH=$(update-java-alternatives --list | grep "java-11" | awk '{print $3}')
+sudo update-alternatives --set java "$JAVA_PATH/bin/java"
 
-# Verify installations
-java -version || { echo "Java installation failed!"; exit 1; }
-mvn -version || { echo "Maven installation failed!"; exit 1; }
-aws --version || { echo "AWS CLI installation failed!"; exit 1; }
+# Verify Java installation
+java -version || echo "Java installation failed!"
+mvn -version || echo "Maven installation failed!"
+aws --version || echo "AWS CLI installation failed!"
 
-# Start and enable Tomcat
-sudo systemctl start tomcat9 || { echo "Failed to start Tomcat!"; exit 1; }
+# Ensure Tomcat service starts
+sudo systemctl start tomcat9
 sudo systemctl enable tomcat9
 
-# Set permissions for Tomcat deployment
+# Set permissions for Tomcat deployment directory
 sudo chown -R tomcat:tomcat /var/lib/tomcat9/webapps/
 sudo chmod -R 775 /var/lib/tomcat9/webapps/
+
+# Add 'ubuntu' user to 'tomcat' group for deployment access
 sudo usermod -aG tomcat ubuntu
 
-# Modify Tomcat to listen on all IPs (only if file exists)
+# Ensure Tomcat listens on IPv4 (0.0.0.0 instead of localhost)
 if [ -f /etc/tomcat9/server.xml ]; then
     sudo sed -i 's/address="127.0.0.1"/address="0.0.0.0"/' /etc/tomcat9/server.xml
 else
     echo "Warning: Tomcat server.xml not found!"
 fi
 
-# Deploy WAR file from S3
+# Download and deploy the latest WAR file from S3
 sudo rm -rf /var/lib/tomcat9/webapps/ROOT*
-if ! aws s3 cp s3://calculator-bucket-271271271271/java-servlet-calculator.war /var/lib/tomcat9/webapps/ROOT.war; then
-    echo "WAR file deployment failed! Checking bucket permissions..."
+aws s3 cp s3://calculator-bucket-271271271271/java-servlet-calculator.war /var/lib/tomcat9/webapps/ROOT.war || {
+    echo "WAR file deployment failed! Checking bucket access..."
     aws s3 ls s3://calculator-bucket-271271271271/ || echo "Bucket access denied!"
     exit 1
-fi
+}
 
-# Set WAR file permissions
+# Set proper permissions for the WAR file
 sudo chown tomcat:tomcat /var/lib/tomcat9/webapps/ROOT.war
 sudo chmod 644 /var/lib/tomcat9/webapps/ROOT.war
 
-# Restart Tomcat
-sudo systemctl restart tomcat9 || { echo "Failed to restart Tomcat!"; exit 1; }
+# Restart Tomcat to deploy the application
+sudo systemctl restart tomcat9
 
 # Verify Tomcat is running
 systemctl status tomcat9 --no-pager
