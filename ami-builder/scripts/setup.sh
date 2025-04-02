@@ -33,9 +33,9 @@ sudo usermod -aG tomcat ubuntu
 sudo ss -tulnp | grep java 
 
 # Download and deploy the latest WAR file from S3
-sudo rm -rf /var/lib/tomcat9/webapps/ROOT*
+sudo rm -rf /var/lib/tomcat9/webapps/*
 aws sts get-caller-identity || { echo "AWS authentication failed!"; exit 1; }
-aws s3 cp s3://calculator-bucket-271271271271/java-servlet-calculator.war /var/lib/tomcat9/webapps/ROOT.war
+sudo aws s3 cp s3://calculator-bucket-271271271271/java-servlet-calculator.war /var/lib/tomcat9/webapps/ROOT.war
 
 # Restart Tomcat to deploy the application
 sudo systemctl restart tomcat9
