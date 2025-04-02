@@ -13,14 +13,11 @@ source "amazon-ebs" "EBS-is-source" {
   instance_type          = "t2.micro"
   ssh_username           = "ubuntu" # Default for Ubuntu AMI
   ssh_keypair_name       = "packerkey" # Name of your key pair in AWS
-  ssh_private_key_file   =  "~/packerkey.pem"  # Path to your private key file
+  ssh_private_key_file   = "~/packerkey.pem" # Path to your private key file
   ami_name               = "tomcat-mvn-golden-ami-{{timestamp}}"
-  iam_instance_profile = "packer-instance-profile-{{timestamp}}"
-}
-
+  iam_instance_profile   = "packer-instance-profile-{{timestamp}}"
 
   # IAM Role & Instance Profile (Created Dynamically)
-  iam_instance_profile = "packer-instance-profile"
   temporary_iam_instance_profile_policy_document = <<EOF
   {
     "Version": "2012-10-17",
@@ -40,9 +37,6 @@ source "amazon-ebs" "EBS-is-source" {
   }
   EOF
 }
-
-
-
 
 build {
   sources = ["source.amazon-ebs.EBS-is-source"]
