@@ -66,26 +66,13 @@ jobs:
         working-directory: ami-builder/terraform-packer-iam
         run: terraform init
 
-
-
-      - name: Terraform Destroy
-        working-directory: ami-builder/terraform-packer-iam
-        run: terraform destroy -auto-approve 
-
-      - name: Terraform Init
-        working-directory: ami-builder/terraform-packer-iam
-        run: terraform init
-
-
       - name: Terraform Plan
         working-directory: ami-builder/terraform-packer-iam
         run: terraform plan -out=tfplan
 
-
       - name: Terraform Apply
         working-directory: ami-builder/terraform-packer-iam
         run: terraform apply -auto-approve tfplan
-
 
       - name: Setup Packer              
         uses: hashicorp/setup-packer@v2
@@ -97,15 +84,6 @@ jobs:
         run: |
           packer init .
           packer build .
-
-
-      - name: Terraform Init
-        working-directory: infra-deployment
-        run: terraform init
-
-      - name: Terraform Destroy
-        working-directory: infra-deployment
-        run: terraform destroy -auto-approve 
 
       - name: Terraform Init
         working-directory: infra-deployment

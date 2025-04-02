@@ -1,3 +1,13 @@
+terraform {
+  backend "s3" {
+    bucket         = "terraform-state-bucket-unique123"    # Replace with your bucket name
+    key            = "terraform-packer-iam\terraform.tfstate" # Path to the state file
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock-table-packer" # DynamoDB table for state locking
+    encrypt        = true
+  }
+}
+
 provider "aws" {
   region = "us-east-1"
 }
