@@ -1,10 +1,10 @@
 # Input variables for the EC2 module
 
-variable "ami_id" {
-  description = "AMI ID for the EC2 instance" #we are taking it from data.aws_ami from root
-  type        = string
-  default = "ami-0214c0e4bf42088ab"
-}
+# variable "ami_id" {
+#   description = "AMI ID for the EC2 instance" #we are taking it from data.aws_ami from root
+#   type        = string
+#   default = "ami-05df2ab3bdf80f440"
+# }
 
 variable "instance_type" {
   description = "Instance type for the EC2 instance"

@@ -28,7 +28,7 @@ data "aws_ami" "latest_tomcat_ami" {
 # Create a single Launch Template for both Blue & Green
 resource "aws_launch_template" "blue_launch_template" {
   name          = "blue-launch-template"
-  image_id      = var.ami_id
+  image_id      = data.aws_ami.latest_tomcat_ami.id # Use the dynamically fetched AMI
   instance_type = var.instance_type  
   key_name      = var.key_name
   iam_instance_profile {

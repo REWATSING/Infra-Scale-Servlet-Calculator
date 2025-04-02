@@ -89,12 +89,12 @@ resource "aws_lb_listener" "https_listener" {
     forward {
       target_group {
         arn    = aws_lb_target_group.blue.arn
-        weight = 100   # 100% traffic to Blue
+        weight = 0   # 0% traffic to Blue
       }
 
       target_group {
         arn    = aws_lb_target_group.green.arn
-        weight = 0   # 0% traffic to Green
+        weight = 100   # 100% traffic to Green
       }
 
     }
@@ -139,7 +139,7 @@ resource "aws_autoscaling_group" "green_asg" {
   vpc_zone_identifier = var.private_subnet_ids  
   launch_template {
     id      = var.green_launch_template_id
-    version = "$Latest"
+    version = "2" # Explicitly use Version 2, ignoring new versions of green launch template
   }
 
   target_group_arns = [aws_lb_target_group.green.arn]
@@ -155,8 +155,6 @@ resource "aws_autoscaling_group" "green_asg" {
   health_check_grace_period = 300      # This is the grace period after instance launch
 
 }
-
-
 
 
 # CloudWatch Alarm for Scaling Up (Blue ASG)
@@ -295,7 +293,8 @@ resource "aws_sns_topic_subscription" "email_subscription" {
 }
 
 
-# Allow CloudWatch and Auto Scaling to publish to SNS
+# SNS Topic Policy to Allow CloudWatch and Auto Scaling to Publish
+# This policy allows CloudWatch and Auto Scaling to publish messages to the SNS topic
 resource "aws_sns_topic_policy" "sns_policy" {
   arn    = aws_sns_topic.tomcat_server_alerts.arn
   policy = <<POLICY
@@ -303,6 +302,7 @@ resource "aws_sns_topic_policy" "sns_policy" {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "AllowCloudWatchToPublish", 
       "Effect": "Allow",
       "Principal": {
         "Service": "cloudwatch.amazonaws.com"
@@ -311,6 +311,7 @@ resource "aws_sns_topic_policy" "sns_policy" {
       "Resource": "${aws_sns_topic.tomcat_server_alerts.arn}"
     },
     {
+      "Sid": "AllowAutoScalingToPublish", 
       "Effect": "Allow",
       "Principal": {
         "Service": "autoscaling.amazonaws.com"
@@ -322,6 +323,7 @@ resource "aws_sns_topic_policy" "sns_policy" {
 }
 POLICY
 }
+
 
 # Auto Scaling Notification for Blue ASG
 resource "aws_autoscaling_notification" "blue_asg_notifications" {
