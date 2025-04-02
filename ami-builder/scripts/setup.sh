@@ -1,13 +1,18 @@
-#!/bin/bash -ex
+#!/bin/bash -x
 
 # Update system
 sudo apt update -y
+# Fix any potential broken packages
+sudo apt-get -f install -y
 
 # Install Java 11 (default in Ubuntu 22.04)
 sudo apt install -y openjdk-11-jdk ca-certificates
 
 # Update system
 sudo apt update -y
+# Fix any potential broken packages
+sudo apt-get -f install -y
+
 
 # Install required packages (Tomcat 9 is available in 22.04)
 sudo apt install -y maven awscli tomcat9 tomcat9-admin tomcat9-common

@@ -15,7 +15,7 @@ source "amazon-ebs" "EBS-is-source" {
   ssh_keypair_name       = "packerkey" # Name of your key pair in AWS
   ssh_private_key_file   = "~/packerkey.pem" # Path to your private key file
   ami_name               = "tomcat-mvn-golden-ami-{{timestamp}}"
-  iam_instance_profile   = "PackerInstanceProfile"   # Use IAM profile created by Terraform
+  iam_instance_profile   = "PackerInstanceProfile"   # Use IAM profile already created by Terraform
 }
 
 
