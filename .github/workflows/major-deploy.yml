@@ -63,15 +63,15 @@ jobs:
           terraform_version: latest
 
       - name: Terraform Init
-        working-directory: \ami-builder\terraform-packer-iam
+        working-directory: ami-builder/terraform-packer-iam
         run: terraform init
 
       - name: Terraform Plan
-        working-directory: \ami-builder\terraform-packer-iam
+        working-directory: ami-builder/terraform-packer-iam
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        working-directory: \ami-builder\terraform-packer-iam
+        working-directory: ami-builder/terraform-packer-iam
         run: terraform apply -auto-approve tfplan
 
 
