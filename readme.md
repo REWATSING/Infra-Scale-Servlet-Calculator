@@ -1,3 +1,20 @@
+<p align="center">
+  <img src="https://img.shields.io/github/last-commit/REWATSING/Infra-Scale-Servlet-Calculator?style=flat-square" />
+  <img src="https://img.shields.io/github/repo-size/REWATSING/Infra-Scale-Servlet-Calculator?style=flat-square" />
+  <img src="https://img.shields.io/github/languages/top/REWATSING/Infra-Scale-Servlet-Calculator?style=flat-square" />
+  <img src="https://img.shields.io/badge/Major%20Deploy-passing-brightgreen?style=flat-square" />
+  <img src="https://img.shields.io/badge/Minor%20Deploy-passing-brightgreen?style=flat-square" />
+</p>
+
+<h1 align="center">⚙️ Infra-Scale-Servlet-Calculator</h1>
+
+<p align="center">
+  A <strong>fully automated Infrastructure-as-Code DevOps project</strong> deploying a <strong>scalable Java Servlet application</strong> using 
+  <strong>Packer</strong>, <strong>Terraform</strong>, and <strong>GitHub Actions</strong> — featuring <em>blue-green deployment</em>, 
+  <em>custom AMI creation</em>, <em>Tomcat server setup</em>, and full-stack <strong>AWS service integration</strong> with real-time monitoring & alerting.
+</p>
+
+
 # ⚙️ Infra-Scale-Servlet-Calculator
 
 A **fully automated Infrastructure-as-Code DevOps project** deploying a **scalable Java Servlet application** using **Packer**, **Terraform**, and **GitHub Actions** — featuring **blue-green deployment**, **custom AMI creation**, **Tomcat server setup**, and end-to-end **AWS service integration** with real-time monitoring and alerting.
