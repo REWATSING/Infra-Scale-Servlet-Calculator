@@ -1,108 +1,80 @@
-# Java Servlet Application with Blue-Green Deployment on AWS
+# ⚙️ Infra-Scale-Servlet-Calculator
 
-## Overview
-This project demonstrates the deployment of a Java Servlet-based calculator application using a robust CI/CD pipeline with blue-green deployment. The infrastructure is provisioned using Terraform, AMIs are built using Packer, and the deployment process is automated with GitHub Actions and AWS services.
+A **fully automated Infrastructure-as-Code DevOps project** deploying a **scalable Java Servlet application** using **Packer**, **Terraform**, and **GitHub Actions** — featuring **blue-green deployment**, **custom AMI creation**, **Tomcat server setup**, and end-to-end **AWS service integration** with real-time monitoring and alerting.
 
-## Architecture
-The deployment follows a blue-green strategy with the following components:
+![GitHub last commit](https://img.shields.io/github/last-commit/REWATSING/Infra-Scale-Servlet-Calculator)
+![GitHub repo size](https://img.shields.io/github/repo-size/REWATSING/Infra-Scale-Servlet-Calculator)
+![GitHub language](https://img.shields.io/github/languages/top/REWATSING/Infra-Scale-Servlet-Calculator)
+![GitHub workflow status](https://img.shields.io/github/actions/workflow/status/REWATSING/Infra-Scale-Servlet-Calculator/major-deploy.yml?label=Major%20Deploy)
+![GitHub workflow status](https://img.shields.io/github/actions/workflow/status/REWATSING/Infra-Scale-Servlet-Calculator/minor-deploy.yml?label=Minor%20Deploy)
 
-- **Amazon EC2**: Hosts running Tomcat and serving the application.
-- **Packer**: Used to create an Amazon Machine Image (AMI) with the pre-configured application environment.
-- **Terraform**: Provisions infrastructure, including ALB, ASG, security groups, and networking.
-- **Application Load Balancer (ALB)**: Distributes traffic between blue and green environments.
-- **Auto Scaling Groups (ASG)**: Ensures high availability by managing EC2 instances.
-- **S3**: Stores and retrieves the application `.war` file.
-- **GitHub Actions**: Automates build and deployment workflows.
-- **Tomcat**: Serves the Java Servlet application.
-- **Health Checks**: Ensures seamless traffic shifting between environments.
+---
 
-## Deployment Workflow
+## 🚀 Project Overview
 
-### 1. Build AMI with Packer
-- Packer is used to create an AMI with Tomcat pre-installed.
-- The AMI is tagged for later deployment.
+This project provisions and manages a **highly available and scalable** Java Servlet application using a full suite of AWS resources — all defined as code and fully automated with CI/CD workflows.
 
-### 2. Infrastructure Provisioning with Terraform
-- Terraform deploys:
-  - VPC, subnets, and security groups.
-  - ALB with HTTPS and forwarding rules.
-  - ASGs for blue and green environments.
-  - Launch templates with `user_data` scripts.
+---
 
-### 3. Application Deployment Process
-- GitHub Actions workflow:
-  - Builds the Java Servlet application using Maven.
-  - Uploads the `.war` file to S3.
-- EC2 instances fetch the `.war` file on startup via `user_data`:
-  ```bash
-  aws s3 cp s3://calculator-bucket/java-servlet-calculator.war /var/lib/tomcat9/webapps/
-  systemctl restart tomcat9
-  ```
+## 🔧 Key Features
 
-### 4. Blue-Green Deployment
-- ALB initially routes traffic to the `green` ASG.
-- The `blue` ASG remains inactive or receives 0% traffic.
-- After validation, traffic is shifted from `green` to `blue`.
+- 🛠️ **AMI Creation** with Packer (Tomcat + WAR pre-installed)
+- ☁️ **Infrastructure** via Terraform (VPC, Subnets, ALB, ASG, EC2, Route53, etc.)
+- 🔁 **Blue/Green Deployment** using Launch Templates and ASGs
+- 🚀 **CI/CD Pipelines** via GitHub Actions for both major & minor deployments
+- 🛰️ **Route53 + ACM SSL** for secure custom domain routing
+- 📦 **S3-integrated WAR** delivery during lightweight updates
+- 🔐 **GitHub Secrets** used for secure pipeline operations
+- 📊 **CloudWatch Metrics + Logs** for monitoring
+- 🔔 **SNS Topic + Email Alerts** for EC2, ASG, and ALB issues
 
-## Terraform Code Highlights
+---
 
-### ALB Configuration
-```hcl
-resource "aws_lb_listener" "https_listener" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.acm_certificate_arn
+## ✅ How It Works
 
-  default_action {
-    type = "forward"
+### 🔄 Major Update – Full Infra + WAR Deployment
 
-    forward {
-      target_group {
-        arn    = aws_lb_target_group.blue.arn
-        weight = 0  # Initially set to 0 for blue
-      }
+**Branch:** `major-update`  
+Rebuilds AMI → Creates full infrastructure → Blue-Green deployment
 
-      target_group {
-        arn    = aws_lb_target_group.green.arn
-        weight = 100  # All traffic to green initially
-      }
-    }
-  }
-}
-```
+**Flow:**
+1. GitHub Actions triggers Packer to build a fresh AMI with Tomcat and the WAR app.
+2. Terraform uses this AMI to launch new Auto Scaling Groups (green).
+3. ALB Target Groups are switched to point to green ASG.
+4. The old (blue) ASG is terminated.
 
-### ASG Configuration
-```hcl
-resource "aws_autoscaling_group" "blue_asg" {
-  name                = "blue-asg"
-  desired_capacity    = 2
-  min_size           = 1
-  max_size           = 3
-  launch_template {
-    id      = var.aws_launch_template_id
-    version = "$Latest"
-  }
-  target_group_arns = [aws_lb_target_group.blue.arn]
-}
-```
+---
 
-## Health Check Endpoint
-The application provides a `/health` endpoint that ALB uses to determine instance health.
+### ♻️ Minor Update – WAR-Only Update via S3
 
-## Accessing the Application
-- The application is accessible via the ALB DNS name:
-  ```
-  https://first-alb-xxxxxxx.us-east-1.elb.amazonaws.com/
-  ```
+**Branch:** `minor-update`  
+Dynamic WAR update via user data script → Zero-downtime deployment
 
-## Future Enhancements
-- Implementing Canary Deployment.
-- Adding Monitoring and Logging with CloudWatch.
-- Automating rollback on deployment failure.
+**Flow:**
+1. GitHub Actions builds WAR and uploads to S3.
+2. Terraform triggers new EC2 launch with existing AMI.
+3. EC2 instances use `user_data` to pull WAR from S3 and deploy on Tomcat.
+4. ALB performs health checks and switches traffic to new target group.
+5. Previous (blue) instances are terminated safely.
 
-## Conclusion
-This project demonstrates a production-grade Java application deployment with full automation, blue-green switching, and infrastructure-as-code practices. It ensures high availability, scalability, and seamless updates with zero downtime.
+---
 
-hello there
+## 📣 SNS Alerts & Notifications
+
+To ensure real-time observability, this project provisions **CloudWatch Alarms** and an **SNS Topic** for critical alerts:
+
+### 🔔 Alerts Include:
+- 🛑 ASG Unhealthy Instance thresholds
+- 🌐 ALB 5xx response spikes
+- 🧠 High CPU/memory usage
+- ❗ Deployment rollbacks
+
+### 🔧 SNS Setup via Terraform:
+- Creates an SNS Topic
+- Subscribes your email (via `terraform.tfvars`)
+- CloudWatch Alarms are attached to critical AWS services
+- Email alerts are sent immediately upon breach
+
+> 📩 Confirm the subscription via email when Terraform runs!
+
+---

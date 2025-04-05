@@ -1,8 +1,10 @@
 name: Major Deployment - Build AMI & Deploy Infra
 
-on:
-  push:
-    branches: [major-update]
+# on:
+#   push:
+#     branches: [major-update]
+#   pull_request:
+#     branches: [major-update]
 
 permissions:
   contents: read

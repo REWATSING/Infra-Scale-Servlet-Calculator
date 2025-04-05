@@ -1,23 +1,44 @@
-# Packer Configuration
-## Use ECDSA key for ssh into aws ami ; keep in mind 
+# Packer AMI Builder – Tomcat + Maven + Java Setup
 
-This directory contains the Packer configuration files for building AMIs.
+This directory contains Packer configuration files used to automate the creation of a custom Amazon Machine Image (AMI). The resulting AMI includes Java (configured as `JAVA_HOME`), Apache Tomcat, Maven, AWS CLI, and all necessary system-level configurations for secure and scalable Java application deployments.
 
-Packer use ##ECDSA key in AWS for SSH : Keep that in
+Additionally, this setup includes IAM role and instance profile creation code required by Packer for secure EC2 access during the build process.
 
-## Files
-- `Tomcat_Maven_GoldenAMI.pkr.hcl`: The main Packer configuration file.
-- `scripts/setup.sh`: A sample provisioning script for installing basic software.
+---
 
-## Usage
-1. Validate the Packer configuration:
-   ```
-   packer validate Tomcat_Maven_GoldenAMI.pkr.hcl
-   ```
+## 📁 Files
 
-2. Build the AMI:
-   ```
-   packer build Tomcat_Maven_GoldenAMI.pkr.hcl
-   ```
+- **Tomcat_Maven_GoldenAMI.pkr.hcl**  
+  The main Packer configuration file that defines the source AMI, build steps, and provisioning flow.
 
-Ensure that your AWS credentials and private key are properly configured before running Packer.
+- **scripts/setup.sh**  
+  A provisioning shell script responsible for installing and configuring:
+  - Java
+  - Apache Maven
+  - AWS CLI
+  - Tomcat server
+  - Directory permission and ownership changes
+  - Environment variables and server-level configurations
+
+---
+
+## 🧰 Features
+
+- OpenJDK installation with `JAVA_HOME` set
+- Apache Maven setup
+- Apache Tomcat installation and configuration
+- AWS CLI installation
+- Directory permission modifications for build/deploy pipelines
+- Custom server configuration setups
+- IAM role and instance profile provisioning code (used by Packer to build AMIs securely)
+
+---
+
+## 🚀 Usage
+
+### 1. Validate the Packer Configuration
+
+Before starting the AMI build, validate the configuration:
+
+```bash
+packer validate Tomcat_Maven_GoldenAMI.pkr.hcl
