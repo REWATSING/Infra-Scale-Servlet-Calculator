@@ -1,44 +1,55 @@
-# Packer AMI Builder – Tomcat + Maven + Java Setup
+# 🚀 Packer AMI Builder – Tomcat + Maven + Java + AWS CLI
 
-This directory contains Packer configuration files used to automate the creation of a custom Amazon Machine Image (AMI). The resulting AMI includes Java (configured as `JAVA_HOME`), Apache Tomcat, Maven, AWS CLI, and all necessary system-level configurations for secure and scalable Java application deployments.
+![Packer](https://img.shields.io/badge/packer-v1.9.4-blue?logo=packer&style=flat-square)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-yellow.svg?style=flat-square)
 
-Additionally, this setup includes IAM role and instance profile creation code required by Packer for secure EC2 access during the build process.
+This repository contains Packer configuration and provisioning scripts for building a **golden Amazon Machine Image (AMI)** preconfigured with:
+
+- **OpenJDK** (Java configured as `JAVA_HOME`)
+- **Apache Tomcat**
+- **Apache Maven**
+- **AWS CLI**
+- **Server-level configurations**
+- **Permission and directory structure modifications**
+- **IAM Role & Instance Profile setup** (for secure access during the Packer build process)
+
+This AMI is ideal for Java-based application deployments, CI/CD pipelines, or autoscaling environments.
 
 ---
 
-## 📁 Files
+## 📁 Directory Structure & Files
 
-- **Tomcat_Maven_GoldenAMI.pkr.hcl**  
-  The main Packer configuration file that defines the source AMI, build steps, and provisioning flow.
-
-- **scripts/setup.sh**  
-  A provisioning shell script responsible for installing and configuring:
-  - Java
-  - Apache Maven
-  - AWS CLI
-  - Tomcat server
-  - Directory permission and ownership changes
-  - Environment variables and server-level configurations
+| File / Directory                | Description |
+|--------------------------------|-------------|
+| `Tomcat_Maven_GoldenAMI.pkr.hcl` | Main Packer template file defining source AMI, builders, provisioners, and output config |
+| `scripts/setup.sh`              | Shell provisioning script for installing and configuring software and system settings |
+| `iam/packer-role.tf` *(optional)* | Terraform script to create the IAM role and instance profile for Packer (optional add-on) |
 
 ---
 
 ## 🧰 Features
 
-- OpenJDK installation with `JAVA_HOME` set
-- Apache Maven setup
-- Apache Tomcat installation and configuration
-- AWS CLI installation
-- Directory permission modifications for build/deploy pipelines
-- Custom server configuration setups
-- IAM role and instance profile provisioning code (used by Packer to build AMIs securely)
+- ✅ Java installation with `JAVA_HOME` export
+- ✅ Apache Maven setup
+- ✅ Apache Tomcat configuration
+- ✅ AWS CLI installation
+- ✅ Directory permission & system tuning for CI/CD
+- ✅ IAM role + instance profile creation (optional with Terraform)
+- ✅ Clean & repeatable image creation workflow
 
 ---
 
-## 🚀 Usage
+## 🚀 Build Process
 
-### 1. Validate the Packer Configuration
+### 🔧 Step 1: Validate the Packer Configuration
 
-Before starting the AMI build, validate the configuration:
+Ensure your Packer configuration is correct:
 
 ```bash
 packer validate Tomcat_Maven_GoldenAMI.pkr.hcl
+ 
+### 🔧 Step 1: Build the Packer Configuration
+
+```bash
+packer build Tomcat_Maven_GoldenAMI.pkr.hcl
