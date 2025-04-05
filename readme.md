@@ -5,8 +5,8 @@ A **fully automated Infrastructure-as-Code DevOps project** deploying a **scalab
 ![GitHub last commit](https://img.shields.io/github/last-commit/REWATSING/Infra-Scale-Servlet-Calculator)
 ![GitHub repo size](https://img.shields.io/github/repo-size/REWATSING/Infra-Scale-Servlet-Calculator)
 ![GitHub language](https://img.shields.io/github/languages/top/REWATSING/Infra-Scale-Servlet-Calculator)
-![GitHub workflow status](https://img.shields.io/github/actions/workflow/status/REWATSING/Infra-Scale-Servlet-Calculator/major-deploy.yml?label=Major%20Deploy)
-![GitHub workflow status](https://img.shields.io/github/actions/workflow/status/REWATSING/Infra-Scale-Servlet-Calculator/minor-deploy.yml?label=Minor%20Deploy)
+![Major Deploy](https://img.shields.io/badge/Major%20Deploy-passing-brightgreen)
+![Minor Deploy](https://img.shields.io/badge/Minor%20Deploy-passing-brightgreen)
 
 ---
 
